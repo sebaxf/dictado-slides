@@ -2,8 +2,10 @@ const statusEl = document.getElementById("status");
 const statusTextEl = document.getElementById("statusText");
 const startBtn = document.getElementById("startBtn");
 const resetBtn = document.getElementById("resetBtn");
+const exportPdfBtn = document.getElementById("exportPdfBtn");
 const slideFrame = document.getElementById("slideFrame");
 const stripEl = document.getElementById("strip");
+const pdfExportContainer = document.getElementById("pdfExportContainer");
 const transcriptText = document.getElementById("transcriptText");
 const modelSelect = document.getElementById("modelSelect");
 const themeSelect = document.getElementById("themeSelect");
@@ -565,6 +567,59 @@ function renderStrip() {
   });
   const active = stripEl.querySelector(".thumb.active");
   if (active) active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  if (exportPdfBtn) exportPdfBtn.disabled = slides.length === 0;
+}
+
+function waitForImage(img) {
+  if (img.complete) return Promise.resolve();
+  return new Promise((resolve) => {
+    img.addEventListener("load", resolve, { once: true });
+    img.addEventListener("error", resolve, { once: true });
+  });
+}
+
+async function exportToPdf() {
+  if (!slides.length || !pdfExportContainer || exportPdfBtn.disabled) return;
+
+  exportPdfBtn.disabled = true;
+  exportPdfBtn.textContent = "preparando…";
+  try {
+    if (!lucideMod) await ensureLucide();
+
+    // Resolve every remote image before printing so the browser does not
+    // open the print preview with unfinished placeholders.
+    if (getImagesEnabled()) {
+      await Promise.all(
+        slides
+          .filter((s) => s.imagen)
+          .map((s) => resolveImage(s.imagen, s.subreddit || "", s.fuente || "")),
+      );
+    }
+
+    pdfExportContainer.innerHTML = slides
+      .map((s, i) => renderLayoutHTML(s, i))
+      .join("");
+    for (const slot of pdfExportContainer.querySelectorAll("[data-icon]")) {
+      renderIconInto(slot, slot.dataset.icon);
+    }
+    await Promise.all([...pdfExportContainer.querySelectorAll("img")].map(waitForImage));
+
+    document.body.classList.add("pdf-exporting");
+    window.addEventListener("afterprint", cleanupPdfExport, { once: true });
+    window.print();
+  } catch (err) {
+    console.error("[pdf] export error:", err);
+    cleanupPdfExport();
+  }
+}
+
+function cleanupPdfExport() {
+  document.body.classList.remove("pdf-exporting");
+  if (pdfExportContainer) pdfExportContainer.innerHTML = "";
+  if (exportPdfBtn) {
+    exportPdfBtn.disabled = slides.length === 0;
+    exportPdfBtn.textContent = "PDF";
+  }
 }
 
 function applyEvent(msg) {
@@ -1304,6 +1359,8 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 fullscreenBtn.addEventListener("click", toggleFullscreen);
+// Keep the app usable while an older cached HTML page is being replaced.
+exportPdfBtn?.addEventListener("click", exportToPdf);
 
 document.addEventListener("keydown", (e) => {
   if (themeModal && !themeModal.hidden) return;
