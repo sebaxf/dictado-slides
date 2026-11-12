@@ -987,3 +987,76 @@ body.fs .fs-hint {
 }
 .transcript-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; }
 .transcript-text { color: var(--fg); flex: 1; }
+
+/* PDF export is populated with one copy of every slide immediately before
+   the browser's native print dialog opens. */
+.pdf-export-container { display: none; }
+
+@media print {
+  @page { size: 16in 9in; margin: 0; }
+
+  html, body {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    background: var(--bg);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.pdf-exporting > :not(#pdfExportContainer) { display: none !important; }
+  body.pdf-exporting #pdfExportContainer {
+    display: block !important;
+    width: 100%;
+  }
+  body.pdf-exporting .pdf-export-container .slide {
+    position: relative;
+    width: 100vw;
+    height: 56.25vw;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    background: var(--bg-2);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    animation: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body.pdf-exporting .pdf-export-container .slide:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  body.pdf-exporting .pdf-export-container .slide * {
+    animation: none !important;
+  }
+  /* Chromium can print a text-clipped gradient as a solid rectangle. Use
+     opaque text colors for PDF while keeping the gradient in the live view. */
+  body.pdf-exporting .pdf-export-container .slide h2 {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: var(--title-grad-start) !important;
+    -webkit-text-fill-color: var(--title-grad-start) !important;
+  }
+  body.pdf-exporting .pdf-export-container .slide .stat-num {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: var(--stat-grad-start) !important;
+    -webkit-text-fill-color: var(--stat-grad-start) !important;
+  }
+  body.pdf-exporting .pdf-export-container .slide-bg,
+  body.pdf-exporting .pdf-export-container .slide-bg::before,
+  body.pdf-exporting .pdf-export-container .slide-bg::after {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body.pdf-exporting .pdf-export-container img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

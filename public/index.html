@@ -101,6 +101,7 @@
         </div>
         <button id="startBtn" class="btn btn-primary" disabled>empezar</button>
         <label class="btn btn-ghost" for="audioInput" id="uploadLabel" style="cursor:pointer">audio…</label>
+        <button id="exportPdfBtn" class="btn btn-ghost" title="descargar la presentación como PDF" disabled>PDF</button>
         <input type="file" id="audioInput" accept="audio/*,video/*" style="display:none" />
         <button id="fullscreenBtn" class="btn btn-ghost" title="pantalla completa (F)">⛶</button>
         <button id="resetBtn" class="btn btn-ghost">reset</button>
@@ -115,6 +116,8 @@
         </div>
       </section>
     </main>
+
+    <div id="pdfExportContainer" class="pdf-export-container" aria-hidden="true"></div>
 
     <!-- Custom instructions modal -->
     <div id="instructionsModal" class="modal" hidden>
